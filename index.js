@@ -14,12 +14,13 @@ const app = express()
 
 function buildManifest2(lido) {
   data = clone(template211.manifest)
-  data['@id'] = 'https://'+lido['lido:lidoRecID']
+  data['@id'] = config.baseurl+lido['lido:lidoRecID']
   data.label = lido['lido:descriptiveMetadata']['lido:objectIdentificationWrap']['lido:titleWrap']['lido:titleSet'][0]['lido:appellationValue']
   data.sequences[0] = clone(template211.sequence)
   data.sequences[0]['@id'] = 'https://'+lido['lido:lidoRecID']+'/s0'
   for(let k in lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet']) {
     data.sequences[0].canvases[k] = clone(template211.canvas)
+    data.sequences[0].canvases[k].label = lido['lido:lidoRecID']
     data.sequences[0].canvases[k]['@id'] = 'https://'+lido['lido:lidoRecID']+'/c'+k
     data.sequences[0].canvases[k].width = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
     data.sequences[0].canvases[k].height = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']

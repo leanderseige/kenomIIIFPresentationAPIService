@@ -1,0 +1,5 @@
+{
+  "port": 2000,
+  "interface": "127.0.0.1",
+  "baseurl": "http://localhost:2000?identifier="
+}

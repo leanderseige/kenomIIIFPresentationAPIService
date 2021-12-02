@@ -1,4 +1,5 @@
 {
   "port": 2000,
-  "interface": "116.202.17.126"
+  "interface": "116.202.17.126",
+  "baseurl": "https://iiif.cloud/kenom?identifier="
 }
