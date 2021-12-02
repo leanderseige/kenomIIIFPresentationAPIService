@@ -3,6 +3,8 @@
 This is an experimental service to generate IIIF manifests for KENOM (http://kenom.de) on-the-fly from OAI/LIDO data.
 
 ## Installation:
+
+* make sure you have nodemon installed https://www.npmjs.com/package/nodemon
 * clone this repository
 * `cd kenomIIIFPresentationAPIService`
 * `cp src/config.example.json src/config.json`
