@@ -1,5 +1,6 @@
 config.json
 cache.db
+logfile.log
 
 # Logs
 logs

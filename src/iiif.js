@@ -27,8 +27,7 @@ exports.buildManifest2 = (lido) => {
       data.sequences[0].canvases[k].images[0].resource.height = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
     }
   } catch(err) {
-    console.log(err)
-    data="Error (Can't generate IIIF Manifest)."
+    return false
   }
   return data
 }
