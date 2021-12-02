@@ -31,7 +31,9 @@
   "canvas": {
     "@id": "",
     "@type": "sc:Canvas",
-    "images": []
+    "images": [],
+    "width":0,
+    "height":0
   },
 
   "image": {

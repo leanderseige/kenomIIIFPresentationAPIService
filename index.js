@@ -14,12 +14,20 @@ const app = express()
 
 function buildManifest2(lido) {
   data = clone(template211.manifest)
+  data['@id'] = 'https://'+lido['lido:lidoRecID']
   data.label = lido['lido:descriptiveMetadata']['lido:objectIdentificationWrap']['lido:titleWrap']['lido:titleSet'][0]['lido:appellationValue']
   data.sequences[0] = clone(template211.sequence)
+  data.sequences[0]['@id'] = 'https://'+lido['ido:lidoRecID']+'/s0'
   for(let k in lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet']) {
     data.sequences[0].canvases[k] = clone(template211.canvas)
+    data.sequences[0].canvases[k]['@id'] = 'https://'+lido['ido:lidoRecID']+'/c'+k
+    data.sequences[0].canvases[k].width = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
+    data.sequences[0].canvases[k].height = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
     data.sequences[0].canvases[k].images[0] = clone(template211.image)
-    data.sequences[0].canvases[k].images[0].resource.service['@id'] = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:linkResource']
+    data.sequences[0].canvases[k].images[0]['@id'] = 'https://'+lido['ido:lidoRecID']+'/i'+k
+    data.sequences[0].canvases[k].images[0].on = 'https://'+lido['ido:lidoRecID']+'/c'+k
+    data.sequences[0].canvases[k].images[0].resource['@id'] = 'https://'+lido['ido:lidoRecID']+'/r'+k
+    data.sequences[0].canvases[k].images[0].resource.service['@id'] = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:linkResource'].replace('/full/full/0/default.jpg','')
     data.sequences[0].canvases[k].images[0].resource.width = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
     data.sequences[0].canvases[k].images[0].resource.height = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
   }
