@@ -1,6 +1,6 @@
 # kenomIIIFPresentationAPIService
 
-This is a service to generate IIIF manifests for KENOM (http://kenom.de) on-the-fly from OAI/LIDO data.
+This is an experimental service to generate IIIF manifests for KENOM (http://kenom.de) on-the-fly from OAI/LIDO data.
 
 ## Installation:
 * clone this repository
