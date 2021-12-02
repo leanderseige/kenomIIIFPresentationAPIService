@@ -44,6 +44,11 @@ app.all('*', function (req, res, next) {
   let identifier = req.query.identifier
   logger.info("Identifier "+identifier)
 
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Headers', '*')
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.header('Content-Type', 'application/json')
+
   let now = Math.round(Date.now()/1000)
   let cacheresult = stmt_get.get(identifier)
   if(cacheresult) {
@@ -61,11 +66,6 @@ app.all('*', function (req, res, next) {
   }
 
   let query = `https://www.kenom.de/oai/?verb=GetRecord&identifier=${identifier}&metadataPrefix=lido`
-
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Headers', '*')
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.header('Content-Type', 'application/json')
 
   let options = {
       method: 'GET',
