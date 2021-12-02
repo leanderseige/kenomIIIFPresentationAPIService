@@ -43,8 +43,12 @@ app.all('*', function (req, res, next) {
 
   let identifier =  "record_DE-15_kenom_186769"
   if(req.query.identifier!==undefined) {
-    identifier = req.query.identifier
+      const regex = new RegExp('^[0-9A-Za-z\_\-]{10,40}$')
+      if(regex.test(req.query.identifier)) {
+	  identifier = req.query.identifier
+      }
   }
+
   let query = `https://www.kenom.de/oai/?verb=GetRecord&identifier=${identifier}&metadataPrefix=lido`
 
   res.header('Access-Control-Allow-Origin', '*')
@@ -69,7 +73,11 @@ app.all('*', function (req, res, next) {
       data = buildManifest2(data['OAI-PMH']['GetRecord']['record']['metadata']['lido:lido'])
       res.header('Content-type', 'application/json')
       res.send(data)
-    }).catch(err => logger.error(err))
+    }).catch(err => { 
+	    logger.error(err)
+	    res.send("Error")
+	 }
+    )
 })
 
 app.listen(config.port,config.interface)
