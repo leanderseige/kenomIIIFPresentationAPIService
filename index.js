@@ -46,7 +46,7 @@ app.all('*', function (req, res, next) {
   }
   let query = `https://www.kenom.de/oai/?verb=GetRecord&identifier=${identifier}&metadataPrefix=lido`
 
-  res.header('Access-Control-Allow-Origin', '*')
+  // res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Headers', '*')
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
   // res.header('Content-Type', 'application/json')
