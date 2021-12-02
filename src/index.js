@@ -87,7 +87,6 @@ app.all('*', function (req, res, next) {
       logger.info("Updating cache.")
       stmt_store.run(identifier, Math.round(Date.now()/1000), JSON.stringify(data))
       logger.info("Sending data.")
-      res.header('Content-type', 'application/json')
       res.send(JSON.stringify(data))
     }).catch(err => {
         logger.error("Error. Could not complete request.")
