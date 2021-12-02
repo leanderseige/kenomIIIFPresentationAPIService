@@ -20,9 +20,9 @@ logger.level = 'INFO'
 
 // Database
 const db = new Database('cache.db')
+db.exec(cache_table_definition)
 const stmt_get = db.prepare(cache_get_query)
 const stmt_store = db.prepare(cache_store_query)
-db.exec(cache_table_definition)
 
 // Run Server
 const app = express()
