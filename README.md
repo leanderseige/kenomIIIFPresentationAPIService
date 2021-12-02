@@ -8,7 +8,7 @@ This is a service to generate IIIF manifests for KENOM (http://kenom.de) on-the-
 * `cp src/config.example.json src/config.json`
 * `vi src/config.json`
 * `npm install`
-* `npm start`
+* `screen npm start`
 
 ## Demo
 
