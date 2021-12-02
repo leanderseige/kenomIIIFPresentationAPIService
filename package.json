@@ -1,0 +1,30 @@
+{
+  "name": "kenomiiifpresentationapiservice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seigedigital/kenomIIIFPresentationAPIService.git"
+  },
+  "author": "Leander Seige",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/seigedigital/kenomIIIFPresentationAPIService/issues"
+  },
+  "homepage": "https://github.com/seigedigital/kenomIIIFPresentationAPIService#readme",
+  "dependencies": {
+    "better-sqlite3": "^7.4.5",
+    "express": "^4.17.1",
+    "fast-xml-parser": "^4.0.0-beta.3",
+    "log4js": "^6.3.0",
+    "node-fetch": "^2.6.6"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
