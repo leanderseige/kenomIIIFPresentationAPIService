@@ -11,7 +11,7 @@ exports.getManifest = (p,logger) => {
         method: 'GET',
         headers: {}
       }
-    logger.info("Fetching fresh data.")
+    logger.info("Fetching fresh data: "+query)
     fetch(query,options)
       .then(response => response.text())
       .then(response => {
