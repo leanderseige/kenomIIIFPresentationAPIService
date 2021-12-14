@@ -16,5 +16,5 @@ This is an experimental service to generate IIIF manifests for KENOM (http://ken
 
 `https://iiif.cloud/kenom/manifests/<identifier>/manifest.json`
 
-https://iiif.cloud/kenom/manifests/record_DE-15_kenom_161020/manifests.json
+https://iiif.cloud/kenom/manifests/record_DE-15_kenom_161020/manifest.json
 
