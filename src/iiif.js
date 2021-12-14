@@ -31,3 +31,20 @@ exports.buildManifest2 = (lido) => {
   }
   return data
 }
+
+exports.buildCollection2 = (dc) => {
+  try {
+    data = tools.clone(template211.collection)
+    data['@id'] = config.baseurl+"/kenom/collections/institution:DE-15/collection.json"
+    for(let k in dc) {
+      let newman = {}
+      newman["@id"] = config.baseurl+"/kenom/manifests/"+dc[k]['header']['identifier']+"/manifest.json"
+      newman["@type"] = "sc:Manifest"
+      newman["label"] = dc[k]['metadata']['oai_dc:dc']['dc:title']
+      data.manifests.push(newman)
+    }
+  } catch(err) {
+    return false
+  }
+  return data
+}

@@ -1,11 +1,11 @@
 const express = require('express')
-const fetch = require('node-fetch')
 const log4js = require('log4js')
-const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser')
 const Database = require('better-sqlite3');
+const { v5 } = require('uuid')
+
 const { cache_table_definition, cache_get_query, cache_store_query } = require('./db')
-const iiif = require('./iiif')
 const config = require('./config.json')
+const kenom = require('./kenom')
 
 // Logger
 log4js.configure({
@@ -28,11 +28,10 @@ const stmt_store = db.prepare(cache_store_query)
 const app = express()
 app.all('*', function (req, res, next) {
 
-  logger.info("New request.")
+  // checking new query
 
 	let p = req.url.split("/")
 	p.shift()
-	console.log({p:p})
 
 	if(p.length!=4) {
     res.status(404).send("Error. Illegal query. 1")
@@ -60,72 +59,62 @@ app.all('*', function (req, res, next) {
 		return
 	}
 
-  let identifier = p[2]
-/*
-  if(req.query.identifier===undefined) {
-    res.status(404).send("Error. No identifier specified.")
-    return
-  }
-
-  const regex = new RegExp('^[0-9A-Za-z\_\-]{10,40}$')
-  if(!regex.test(req.query.identifier)) {
-    res.status(404).send("Error. Illegal identifier specified.")
-    return
-  }
-
-  let identifier = req.query.identifier
-  */
-	logger.info("Identifier "+identifier)
+  // preparing response headers
 
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Headers', '*')
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.header('Content-Type', 'application/json')
 
-  let now = Math.round(Date.now()/1000)
-  let cacheresult = stmt_get.get(identifier)
-  if(cacheresult) {
-    let age = now-cacheresult.last
-    logger.info("Cache age: "+age+" sec.")
-    if(age<60) {
-      logger.info("Sending cached data.")
-      res.send(cacheresult.body)
+  // caching
+
+  // let key = v5(req.url,'3c0fce3d-6601-45fb-813d-b0c6e823ddfa')
+  // let now = Math.round(Date.now()/1000)
+  // let cacheresult = stmt_get.get(key)
+  // if(cacheresult) {
+  //   let age = now-cacheresult.last
+  //   logger.info("Cache age: "+age+" sec.")
+  //   if(age<60) {
+  //     logger.info("Sending cached data.")
+  //     res.send(cacheresult.body)
+  //     return
+  //   } else {
+  //     logger.info("Cache is too old.")
+  //   }
+  // } else {
+  //   logger.info("No cache available.")
+  // }
+
+  // sender function
+
+  let sender = function(response) {
+    if(response.status!==200) {
+      res.status(response.status).send(response.message)
+      logger.info(`Error. ${response.message}`)
       return
-    } else {
-      logger.info("Cache is too old.")
     }
-  } else {
-    logger.info("No cache available.")
+    // logger.info("Updating cache.")
+    // stmt_store.run(key, Math.round(Date.now()/1000), response.data)
+    logger.info("Sending data.")
+    res.send(response.data)
   }
 
-  let query = `https://www.kenom.de/oai/?verb=GetRecord&identifier=${identifier}&metadataPrefix=lido`
+  switch(p[1]) {
+    case 'collections':
+      kenom.getCollection(p,logger).then(
+        (response) => sender(response)
+      ).catch(error => {
+        logger.error("Error 1")
+      })
+    case 'manifests':
+    default:
+      kenom.getManifest(p,logger).then(
+        (response) => sender(response)
+      ).catch(error => {
+        logger.error("Error 2")
+      })
+  }
 
-  let options = {
-      method: 'GET',
-      headers: {}
-    }
-
-  logger.info("Fetching fresh data.")
-  fetch(query,options)
-    .then(response => response.text())
-    .then(response => {
-      const parser = new XMLParser()
-      let data = parser.parse(response)
-      data = iiif.buildManifest2(data['OAI-PMH']['GetRecord']['record']['metadata']['lido:lido'])
-      if(!data) {
-        res.status(500).send("Error. Can't generate IIIF Manifest.")
-        logger.info("Error. Can't generate IIIF Manifest.")
-        return
-      }
-      logger.info("Updating cache.")
-      stmt_store.run(identifier, Math.round(Date.now()/1000), JSON.stringify(data))
-      logger.info("Sending data.")
-      res.send(JSON.stringify(data))
-    }).catch(err => {
-        logger.error("Error. Could not complete request.")
-        res.status(500).send("Error. Could not complete request.")
-      }
-    )
 })
 
 app.listen(config.port,config.interface)
