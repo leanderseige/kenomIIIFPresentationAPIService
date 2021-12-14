@@ -30,6 +30,38 @@ app.all('*', function (req, res, next) {
 
   logger.info("New request.")
 
+	let p = req.url.split("/")
+	p.shift()
+	console.log({p:p})
+
+	if(p.length!=4) {
+    res.status(404).send("Error. Illegal query. 1")
+		return
+	}
+
+	if(p[0]!=='kenom') {
+    res.status(404).send("Error. Illegal query. 2")
+		return
+	}
+
+	if( ! (['manifests','collections'].includes(p[1])) ) {
+    res.status(404).send("Error. Illegal query. 3")
+		return
+	}
+
+	if( ! (['manifest.json','collection.json'].includes(p[3])) ) {
+    res.status(404).send("Error. Illegal query. 4")
+		return
+	}
+
+  const regexIdCheck = new RegExp('^[:0-9A-Za-z\_\-]{5,40}$')
+  if( ! regexIdCheck.test(p[2]) ) {
+	  res.status(404).send("Error. Illegal query. 5")
+		return
+	}
+
+  let identifier = p[2]
+/*
   if(req.query.identifier===undefined) {
     res.status(404).send("Error. No identifier specified.")
     return
@@ -42,7 +74,8 @@ app.all('*', function (req, res, next) {
   }
 
   let identifier = req.query.identifier
-  logger.info("Identifier "+identifier)
+  */
+	logger.info("Identifier "+identifier)
 
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Headers', '*')
