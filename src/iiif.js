@@ -8,7 +8,7 @@ const config = require('./config.json')
 exports.buildManifest2 = (lido) => {
   try {
     data = tools.clone(template211.manifest)
-    data['@id'] = config.baseurl+lido['lido:lidoRecID']
+    data['@id'] = config.baseurl+`/kenom/manifests/${lido['lido:lidoRecID']}/manifest.json`
     data.label = lido['lido:descriptiveMetadata']['lido:objectIdentificationWrap']['lido:titleWrap']['lido:titleSet'][0]['lido:appellationValue']
     data.sequences[0] = tools.clone(template211.sequence)
     data.sequences[0]['@id'] = 'https://'+lido['lido:lidoRecID']+'/s0'
@@ -38,6 +38,7 @@ exports.buildCollectionOfManifests2 = (part,dc,logger) => {
   try {
     data = tools.clone(template211.collection)
     data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
+    data['label'] = data['@id']
     for(let k in dc) {
       let newman = {}
       newman["@id"] = config.baseurl+"/kenom/manifests/"+dc[k]['header']['identifier']+"/manifest.json"
@@ -56,6 +57,7 @@ exports.buildCollectionOfCollectionPages2 = (part,total,pagesize,logger) => {
   try {
     data = tools.clone(template211.collection)
     data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
+    data['label'] = data['@id']
     for(let page=1; page<=Math.ceil(total/pagesize); page++) {
       let newcol = {}
       newcol["@id"] = config.baseurl+`/kenom/collections/institution:DE-15/${page}.json`

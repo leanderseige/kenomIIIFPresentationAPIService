@@ -3,7 +3,7 @@ const log4js = require('log4js')
 const Database = require('better-sqlite3');
 const { v5 } = require('uuid')
 
-const { cache_table_definition, cache_get_query, cache_store_query } = require('./db')
+const { cache_table_definition, cache_get_query, cache_store_query, cache_truncat_query } = require('./db')
 const config = require('./config.json')
 const kenom = require('./kenom')
 
@@ -21,6 +21,9 @@ logger.level = 'INFO'
 // Database
 const db = new Database('cache.db')
 db.exec(cache_table_definition)
+if(config.cacheClearOneStartup) {
+  db.exec(cache_truncat_query)
+}
 const stmt_get = db.prepare(cache_get_query)
 const stmt_store = db.prepare(cache_store_query)
 
@@ -67,55 +70,61 @@ app.all('*', function (req, res, next) {
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.header('Content-Type', 'application/json')
 
-  // caching
+  let key = v5(req.url,'3c0fce3d-6601-45fb-813d-b0c6e823ddfa')
 
-  // let key = v5(req.url,'3c0fce3d-6601-45fb-813d-b0c6e823ddfa')
-  // let now = Math.round(Date.now()/1000)
-  // let cacheresult = stmt_get.get(key)
-  // if(cacheresult) {
-  //   let age = now-cacheresult.last
-  //   logger.info("Cache age: "+age+" sec.")
-  //   if(age<60) {
-  //     logger.info("Sending cached data.")
-  //     res.send(cacheresult.body)
-  //     return
-  //   } else {
-  //     logger.info("Cache is too old.")
-  //   }
-  // } else {
-  //   logger.info("No cache available.")
-  // }
+  // caching
+  if(config.caching) {
+    logger.info("Looking for cached data.")
+    let now = Math.round(Date.now()/1000)
+    let cacheresult = stmt_get.get(key)
+    if(cacheresult) {
+      let age = now-cacheresult.last
+      logger.info("Cache age: "+age+" sec.")
+      if(age<60) {
+        logger.info("Sending cached data.")
+        res.send(cacheresult.body)
+        return
+      } else {
+        logger.info("Cache is too old.")
+      }
+    } else {
+      logger.info("No cache available.")
+    }
+  }
 
   // sender function
-
   let sender = function(response) {
     if(response.status!==200) {
-      res.status(response.status).send(response.message)
       logger.info(`Error. ${response.message}`)
+      res.status(response.status).send(response.message)
       return
     }
-    // logger.info("Updating cache.")
-    // stmt_store.run(key, Math.round(Date.now()/1000), response.data)
+    if(config.caching) {
+      logger.info("Updating cache.")
+      stmt_store.run(key, Math.round(Date.now()/1000), response.data)
+    }
     logger.info("Sending data.")
     res.send(response.data)
   }
 
   switch(p[1]) {
     case 'collections':
-      kenom.getCollection(p,logger).then(
-        (response) => sender(response)
-      ).catch(error => {
+      kenom.getCollection(p,logger).then( (response) =>{
+        sender(response)
+      }).catch(error => {
         logger.error("Error getting Collection.")
         logger.error(error)
+        res.status(error.status).send(error.message)
       })
       break
     case 'manifests':
     default:
-      kenom.getManifest(p,logger).then(
-        (response) => sender(response)
-      ).catch(error => {
+      kenom.getManifest(p,logger).then( (response) =>{
+        sender(response)
+      }).catch(error => {
         logger.error("Error getting Manifest.")
         logger.error(error)
+        res.status(error.status).send(error.message)
       })
   }
 

@@ -32,6 +32,7 @@ exports.getManifest = (p,logger) => {
 
 function getRecursiveCollection(query,options,part,logger) {
   return new Promise((resolve, reject) => {
+    console.log("QUERY "+query)
     fetch(query,options)
       .then(response => response.text())
       .then(response => {
@@ -41,11 +42,22 @@ function getRecursiveCollection(query,options,part,logger) {
           resolve(data)
           return
         }
+        let nofrecords = parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_completeListSize'])
+        let pagesize = 200 // FIXME parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_cursor'])
         page=parseInt(part)
+        console.log("page: "+page)
+        console.log("pagesize: "+pagesize)
+        console.log("nofrecords: "+nofrecords)
+        console.log("maxpages: "+Math.ceil(nofrecords/pagesize))
+        if(page>Math.ceil(nofrecords/pagesize)||page===0) {
+          reject({status:404,message:"Illegal page number.",data:null})
+          return
+        }
         if(page===1) {
           resolve(data['OAI-PMH']['ListRecords']['record'])
           return
         }
+        logger.info(`Step ${page} to ${part}`)
         getRecursiveCollection(
             `https://www.kenom.de/oai/?verb=ListRecords&resumptionToken=${data['OAI-PMH']['ListRecords']['resumptionToken']['#text']}`
             ,options
@@ -53,9 +65,9 @@ function getRecursiveCollection(query,options,part,logger) {
             ,logger
           )
           .then( (response) => resolve(response) )
-          .catch(err => { reject("ERROR 2") })
+          .catch(error => { reject(error) })
       }).catch(error => {
-          logger.error("Error getting OAI data.")
+          logger.error("Error getting OAI data (manifest).")
           logger.error(error)
           reject({status:500,message:"Could not complete request.",data:null})
         }
@@ -85,8 +97,12 @@ exports.getCollection = (p,logger) => {
         }
         // data = response
         resolve({status:200,message:null,data:JSON.stringify(data)})
-      })
-      .catch(err => { reject("ERROR 2 "+err) })
+      }).catch(error => {
+          logger.error("Error getting OAI data (collection).")
+          logger.error(error)
+          reject({status:500,message:"Could not complete request.",data:null})
+        }
+      )
   })
 
 }
