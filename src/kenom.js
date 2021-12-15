@@ -2,6 +2,7 @@ const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser')
 const fetch = require('node-fetch')
 const Database = require('better-sqlite3');
 const { v5 } = require('uuid')
+const config = require('./config.json')
 
 const { cache_table_definition, cache_get_query, cache_store_query, cache_truncat_query } = require('./db')
 const iiif = require('./iiif')
@@ -18,10 +19,14 @@ function getCachedFetch(query,useCache,logger) {
     if(useCache) {
       let cacheresult = stmt_get.get(key)
       if(cacheresult) {
-        logger.info("Returning backend cache data.")
-        resolve(cacheresult.body)
-        db.close()
-        return
+				let now = Math.round(Date.now()/1000)
+				let age = now-cacheresult.last
+				if(config.cacheMaxAge===-1 || age<config.cacheMaxAge) {
+        	logger.info("Returning backend cache data.")
+        	resolve(cacheresult.body)
+        	db.close()
+        	return
+				}
       }
     }
 
@@ -78,21 +83,26 @@ function getRecursiveCollection(query,part,logger) {
           resolve(data)
           return
         }
-        let nofrecords = parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_completeListSize'])
-        let pagesize = 200 // FIXME parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_cursor'])
         page=parseInt(part)
-        console.log("page: "+page)
-        console.log("pagesize: "+pagesize)
-        console.log("nofrecords: "+nofrecords)
-        console.log("maxpages: "+Math.ceil(nofrecords/pagesize))
-        if(page>Math.ceil(nofrecords/pagesize)||page===0) {
-          reject({status:404,message:"Illegal page number.",data:null})
-          return
-        }
         if(page===1) {
           resolve(data['OAI-PMH']['ListRecords']['record'])
           return
         }
+        let nofrecords = parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_completeListSize'])
+/*
+				if(data['OAI-PMH']['ListRecords']['resumptionToken']) {
+        	let pagesize = 200 // FIXME parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_cursor'])
+	        page=parseInt(part)
+  	      console.log("page: "+page)
+	        console.log("pagesize: "+pagesize)
+	        console.log("nofrecords: "+nofrecords)
+	        console.log("maxpages: "+Math.ceil(nofrecords/pagesize))
+  	      if(page>Math.ceil(nofrecords/pagesize)||page===0) {
+    	      reject({status:404,message:"Illegal page number.",data:null})
+      	    return
+	        }
+				}
+*/
         logger.info(`Step ${page} to ${part}`)
         getRecursiveCollection(
             `https://www.kenom.de/oai/?verb=ListRecords&resumptionToken=${data['OAI-PMH']['ListRecords']['resumptionToken']['#text']}`

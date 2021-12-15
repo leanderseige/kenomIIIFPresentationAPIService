@@ -4,6 +4,5 @@
   "baseurl": "http://localhost:2000",
   "cacheing": true,
   "cacheClearOneStartup": true,
-  "cacheManifestsMaxAge": 60,
-  "cacheCollectionsMaxAge": false
+  "cacheMaxAge": -1
 }

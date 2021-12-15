@@ -80,7 +80,7 @@ app.all('*', function (req, res, next) {
     if(cacheresult) {
       let age = now-cacheresult.last
       logger.info("Cache age: "+age+" sec.")
-      if(age<60) {
+      if(config.cacheMaxAge===-1 || age<config.cacheMaxAge) {
         logger.info("Sending cached data.")
         res.send(cacheresult.body)
         return
