@@ -70,7 +70,7 @@ app.all('*', function (req, res, next) {
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.header('Content-Type', 'application/json')
 
-  let key = v5(req.url,'3c0fce3d-6601-45fb-813d-b0c6e823ddfa')
+  let key = v5(config.baseurl+req.url,'3c0fce3d-6601-45fb-813d-b0c6e823ddfa')
 
   // caching
   if(config.caching) {

@@ -1,19 +1,56 @@
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser')
 const fetch = require('node-fetch')
+const Database = require('better-sqlite3');
+const { v5 } = require('uuid')
 
+const { cache_table_definition, cache_get_query, cache_store_query, cache_truncat_query } = require('./db')
 const iiif = require('./iiif')
+
+function getCachedFetch(query,useCache,logger) {
+  return new Promise((resolve,reject) => {
+
+    let key = v5(query,'3c0fce3d-6601-45fb-813d-b0c6e823ddfa')
+
+    const db = new Database('cache.db')
+    const stmt_get = db.prepare(cache_get_query)
+    const stmt_store = db.prepare(cache_store_query)
+
+    if(useCache) {
+      let cacheresult = stmt_get.get(key)
+      if(cacheresult) {
+        logger.info("Returning backend cache data.")
+        resolve(cacheresult.body)
+        db.close()
+        return
+      }
+    }
+
+    let options = {
+      method: 'GET',
+      headers: {}
+    }
+    fetch(query,options)
+      .then(response => response.text())
+      .then(response => {
+        stmt_store.run(key, Math.round(Date.now()/1000), response)
+        db.close()
+        resolve(response)
+        return
+      }).catch( error => {
+        db.close()
+        reject({status:500,message:"Could not complete request. 1",data:null})
+        return
+      })
+
+  })
+}
 
 
 exports.getManifest = (p,logger) => {
   return new Promise((resolve, reject) => {
     let query = `https://www.kenom.de/oai/?verb=GetRecord&identifier=${p[2]}&metadataPrefix=lido`
-    let options = {
-        method: 'GET',
-        headers: {}
-      }
     logger.info("Fetching fresh data: "+query)
-    fetch(query,options)
-      .then(response => response.text())
+    getCachedFetch(query,true,logger)
       .then(response => {
         const parser = new XMLParser()
         let data = parser.parse(response)
@@ -30,11 +67,10 @@ exports.getManifest = (p,logger) => {
   })
 }
 
-function getRecursiveCollection(query,options,part,logger) {
+function getRecursiveCollection(query,part,logger) {
   return new Promise((resolve, reject) => {
     console.log("QUERY "+query)
-    fetch(query,options)
-      .then(response => response.text())
+    getCachedFetch(query,true,logger)
       .then(response => {
         const parser = new XMLParser({ignoreAttributes:false})
         let data = parser.parse(response)
@@ -60,7 +96,6 @@ function getRecursiveCollection(query,options,part,logger) {
         logger.info(`Step ${page} to ${part}`)
         getRecursiveCollection(
             `https://www.kenom.de/oai/?verb=ListRecords&resumptionToken=${data['OAI-PMH']['ListRecords']['resumptionToken']['#text']}`
-            ,options
             ,`${(page-1)}`
             ,logger
           )
@@ -82,11 +117,7 @@ exports.getCollection = (p,logger) => {
     let part = p[3].replace('.json','')
     let query = `https://www.kenom.de/oai/?verb=ListRecords&metadataPrefix=oai_dc&set=${p[2]}`
     console.log(query)
-    let options = {
-      method: 'GET',
-      headers: {}
-    }
-    getRecursiveCollection(query,options,part,logger)
+    getRecursiveCollection(query,part,logger)
       .then( (response) => {
         if(part==='collection') {
           data = response['OAI-PMH']['ListRecords']['resumptionToken']
