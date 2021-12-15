@@ -39,6 +39,7 @@ exports.buildCollectionOfManifests2 = (part,dc,logger) => {
     data = tools.clone(template211.collection)
     data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
     data['label'] = data['@id']
+		delete data.collections
     for(let k in dc) {
       let newman = {}
       newman["@id"] = config.baseurl+"/kenom/manifests/"+dc[k]['header']['identifier']+"/manifest.json"
@@ -58,6 +59,7 @@ exports.buildCollectionOfCollectionPages2 = (part,total,pagesize,logger) => {
     data = tools.clone(template211.collection)
     data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
     data['label'] = data['@id']
+		delete data.manifests
     for(let page=1; page<=Math.ceil(total/pagesize); page++) {
       let newcol = {}
       newcol["@id"] = config.baseurl+`/kenom/collections/institution:DE-15/${page}.json`
