@@ -3,7 +3,7 @@ const log4js = require('log4js')
 const Database = require('better-sqlite3');
 const { v5 } = require('uuid')
 
-const { cache_table_definition, cache_get_query, cache_store_query, cache_truncat_query } = require('./db')
+const { cache_table_definition, cache_get_query, cache_store_query, cache_truncate_query } = require('./db')
 const config = require('./config.json')
 const kenom = require('./kenom')
 
@@ -21,8 +21,8 @@ logger.level = 'INFO'
 // Database
 const db = new Database('cache.db')
 db.exec(cache_table_definition)
-if(config.cacheClearOneStartup) {
-  db.exec(cache_truncat_query)
+if(config.cacheClearOnStartup) {
+  db.exec(cache_truncate_query)
 }
 const stmt_get = db.prepare(cache_get_query)
 const stmt_store = db.prepare(cache_store_query)

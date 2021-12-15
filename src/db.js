@@ -4,7 +4,7 @@ exports.cache_table_definition = `CREATE TABLE IF NOT EXISTS cache (
   body BLOB
 )`
 
-exports.cache_truncat_query = `DELETE FROM cache`
+exports.cache_truncate_query = `DELETE FROM cache`
 
 exports.cache_get_query = `SELECT body, last FROM cache WHERE key = ? `
 
