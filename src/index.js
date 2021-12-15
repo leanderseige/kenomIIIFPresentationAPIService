@@ -48,7 +48,8 @@ app.all('*', function (req, res, next) {
 		return
 	}
 
-	if( ! (['manifest.json','collection.json'].includes(p[3])) ) {
+  const regexFilenameCheck = new RegExp('^(collection|manifest|[0-9]{1,4}).json$')
+	if( ! regexFilenameCheck.test(p[3]) ) {
     res.status(404).send("Error. Illegal query. 4")
 		return
 	}
@@ -104,14 +105,17 @@ app.all('*', function (req, res, next) {
       kenom.getCollection(p,logger).then(
         (response) => sender(response)
       ).catch(error => {
-        logger.error("Error 1")
+        logger.error("Error getting Collection.")
+        logger.error(error)
       })
+      break
     case 'manifests':
     default:
       kenom.getManifest(p,logger).then(
         (response) => sender(response)
       ).catch(error => {
-        logger.error("Error 2")
+        logger.error("Error getting Manifest.")
+        logger.error(error)
       })
   }
 

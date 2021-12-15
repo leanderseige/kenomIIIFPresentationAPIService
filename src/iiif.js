@@ -34,10 +34,10 @@ exports.buildManifest2 = (lido) => {
   return data
 }
 
-exports.buildCollection2 = (dc) => {
+exports.buildCollectionOfManifests2 = (part,dc,logger) => {
   try {
     data = tools.clone(template211.collection)
-    data['@id'] = config.baseurl+"/kenom/collections/institution:DE-15/collection.json"
+    data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
     for(let k in dc) {
       let newman = {}
       newman["@id"] = config.baseurl+"/kenom/manifests/"+dc[k]['header']['identifier']+"/manifest.json"
@@ -45,7 +45,26 @@ exports.buildCollection2 = (dc) => {
       newman["label"] = dc[k]['metadata']['oai_dc:dc']['dc:title']
       data.manifests.push(newman)
     }
-  } catch(err) {
+  } catch(error) {
+    logger.error(error)
+    return false
+  }
+  return data
+}
+
+exports.buildCollectionOfCollectionPages2 = (part,total,pagesize,logger) => {
+  try {
+    data = tools.clone(template211.collection)
+    data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
+    for(let page=1; page<=Math.ceil(total/pagesize); page++) {
+      let newcol = {}
+      newcol["@id"] = config.baseurl+`/kenom/collections/institution:DE-15/${page}.json`
+      newcol["@type"] = "sc:Collection"
+      newcol["label"] = `Collection page ${page}`
+      data.collections.push(newcol)
+    }
+  } catch(error) {
+    logger.error(error)
     return false
   }
   return data

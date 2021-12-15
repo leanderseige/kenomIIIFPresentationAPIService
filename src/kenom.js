@@ -30,31 +30,33 @@ exports.getManifest = (p,logger) => {
   })
 }
 
-var count = 0
-
-function getRecursiveCollection(query,options) {
-  count = count + 1
-  console.log(`${count}. run (${count*200} records)`)
+function getRecursiveCollection(query,options,part,logger) {
   return new Promise((resolve, reject) => {
     fetch(query,options)
       .then(response => response.text())
       .then(response => {
-        const parser = new XMLParser()
+        const parser = new XMLParser({ignoreAttributes:false})
         let data = parser.parse(response)
-        console.log(data)
-        // console.log(data['OAI-PMH']['ListRecords']['record'])
-        if(data['OAI-PMH']['ListRecords']['resumptionToken']!==undefined) {
-          getRecursiveCollection(
-            `https://www.kenom.de/oai/?verb=ListRecords&resumptionToken=${data['OAI-PMH']['ListRecords']['resumptionToken']}`
-            ,options)
-            .then( (response) => resolve(response.concat(data['OAI-PMH']['ListRecords']['record'])))
-            .catch(err => { reject("ERROR 2") })
-        } else {
-          console.log("RESOLVING")
-          resolve(data['OAI-PMH']['ListRecords']['record'])
+        if(part==='collection') {
+          resolve(data)
+          return
         }
-      }).catch(err => {
-          console.log("ERROR")
+        page=parseInt(part)
+        if(page===1) {
+          resolve(data['OAI-PMH']['ListRecords']['record'])
+          return
+        }
+        getRecursiveCollection(
+            `https://www.kenom.de/oai/?verb=ListRecords&resumptionToken=${data['OAI-PMH']['ListRecords']['resumptionToken']['#text']}`
+            ,options
+            ,`${(page-1)}`
+            ,logger
+          )
+          .then( (response) => resolve(response) )
+          .catch(err => { reject("ERROR 2") })
+      }).catch(error => {
+          logger.error("Error getting OAI data.")
+          logger.error(error)
           reject({status:500,message:"Could not complete request.",data:null})
         }
       )
@@ -65,18 +67,26 @@ exports.getCollection = (p,logger) => {
   return new Promise((resolve, reject) => {
 
     logger.info("Fetching fresh data.")
-    let query = `https://www.kenom.de/oai/?verb=ListRecords&metadataPrefix=oai_dc&set=institution:DE-15`
+    let part = p[3].replace('.json','')
+    let query = `https://www.kenom.de/oai/?verb=ListRecords&metadataPrefix=oai_dc&set=${p[2]}`
+    console.log(query)
     let options = {
       method: 'GET',
       headers: {}
     }
-    getRecursiveCollection(query,options)
+    getRecursiveCollection(query,options,part,logger)
       .then( (response) => {
-        data = iiif.buildCollection2(response)
+        if(part==='collection') {
+          data = response['OAI-PMH']['ListRecords']['resumptionToken']
+          data = iiif.buildCollectionOfCollectionPages2(part,data['@_completeListSize'],data['@_cursor'],logger)
+          console.log(data)
+        } else {
+          data = iiif.buildCollectionOfManifests2(part,response,logger)
+        }
         // data = response
         resolve({status:200,message:null,data:JSON.stringify(data)})
       })
-      .catch(err => { reject("ERROR 2") })
+      .catch(err => { reject("ERROR 2 "+err) })
   })
 
 }
