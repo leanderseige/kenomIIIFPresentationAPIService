@@ -17,8 +17,6 @@
     "@type": "sc:Manifest",
     "label": "",
     "metadata": [],
-    "license": "",
-    "attribution": "",
     "sequences": []
   },
 
@@ -63,8 +61,6 @@
     "@type": "sc:Collection",
     "label": "",
     "description": "",
-    "attribution": "",
-    "logo": "",
     "collections": [],
     "manifests": []
   }

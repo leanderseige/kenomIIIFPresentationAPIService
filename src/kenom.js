@@ -120,6 +120,20 @@ function getRecursiveCollection(query,part,logger) {
   })
 }
 
+function getSetsInfo(useCache,logger) {
+  return new Promise((resolve,reject) => {
+    getCachedFetch('https://www.kenom.de/oai/?verb=ListSets',useCache,logger)
+      .then(response => {
+        const parser = new XMLParser()
+        let data = parser.parse(response)
+        resolve(data['OAI-PMH']['ListSets']['set'])
+      })
+      .catch(error => {
+        reject(error)
+      })
+  })
+}
+
 exports.getCollection = (p,logger) => {
   return new Promise((resolve, reject) => {
 
@@ -129,15 +143,23 @@ exports.getCollection = (p,logger) => {
     console.log(query)
     getRecursiveCollection(query,part,logger)
       .then( (response) => {
-        if(part==='collection') {
-          data = response['OAI-PMH']['ListRecords']['resumptionToken']
-          data = iiif.buildCollectionOfCollectionPages2(part,data['@_completeListSize'],data['@_cursor'],logger)
-          console.log(data)
-        } else {
-          data = iiif.buildCollectionOfManifests2(part,response,logger)
-        }
-        // data = response
-        resolve({status:200,message:null,data:JSON.stringify(data)})
+        getSetsInfo(true,logger).then(setsInfo => {
+          if(part==='collection') {
+            data = response['OAI-PMH']['ListRecords']['resumptionToken']
+            data = iiif.buildCollectionOfCollectionPages2(part,data['@_completeListSize'],data['@_cursor'],logger)
+          } else {
+            data = iiif.buildCollectionOfManifests2(part,response,logger)
+          }
+          for(let setInfo of setsInfo) {
+            if(setInfo.setSpec === p[2]) {
+              data.description = setInfo.setName
+              break
+            }
+          }
+          resolve({status:200,message:null,data:JSON.stringify(data)})
+        }).catch(
+          e => console.error(e)
+        )
       }).catch(error => {
           logger.error("Error getting OAI data (collection).")
           logger.error(error)
@@ -145,5 +167,4 @@ exports.getCollection = (p,logger) => {
         }
       )
   })
-
 }
