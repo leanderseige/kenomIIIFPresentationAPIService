@@ -17,7 +17,7 @@ This is an experimental service to generate IIIF manifests for KENOM (http://ken
 `https://iiif.ub.uni-leipzig.de/kenom/<Argument1>/<Argument2>/<Argument3>.json`
 
 | |Argument 1|Argument 2|Argument 3|
-| |----------|----------|----------|
+|-|----------|----------|----------|
 |Top Level Collection|`collections`|Set (according to OAI/PMH)|`collection`|
 |Subordinate Collection|`collections`|Set (according to OAI/PMH)|page number (from OAI/PMH)|
 |Manifest|`manifests`|Object ID|`manifest`|
