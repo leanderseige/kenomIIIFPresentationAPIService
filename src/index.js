@@ -46,22 +46,28 @@ app.all('*', function (req, res, next) {
 		return
 	}
 
+  // p[1] => collection or manifest
 	if( ! (['manifests','collections'].includes(p[1])) ) {
     res.status(404).send("Error. Illegal query. 3")
 		return
 	}
 
+  // p[2] => collection set
+  //      => manifest id
+  const regexIdCheck = new RegExp('^[:0-9A-Za-z\_\-]{5,40}$')
+  if( ! regexIdCheck.test(p[2]) ) {
+	  res.status(404).send("Error. Illegal query. 5")
+		return
+	}
+
+  // p[3] => collection:collection for top level or number for sub-level
+  //      => manifest: just 'manifest'
   const regexFilenameCheck = new RegExp('^(collection|manifest|[0-9]{1,4}).json$')
 	if( ! regexFilenameCheck.test(p[3]) ) {
     res.status(404).send("Error. Illegal query. 4")
 		return
 	}
 
-  const regexIdCheck = new RegExp('^[:0-9A-Za-z\_\-]{5,40}$')
-  if( ! regexIdCheck.test(p[2]) ) {
-	  res.status(404).send("Error. Illegal query. 5")
-		return
-	}
 
   // preparing response headers
 

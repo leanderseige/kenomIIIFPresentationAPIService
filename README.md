@@ -12,9 +12,20 @@ This is an experimental service to generate IIIF manifests for KENOM (http://ken
 * `npm install`
 * `screen npm start`
 
-## Demo
+## URI Schemas
 
-`https://iiif.cloud/kenom/manifests/<identifier>/manifest.json`
+`https://iiif.ub.uni-leipzig.de/kenom/<Argument1>/<Argument2>/<Argument3>.json`
 
-https://iiif.cloud/kenom/manifests/record_DE-15_kenom_161020/manifest.json
+| |Argument 1|Argument 2|Argument 3|
+| |----------|----------|----------|
+|Top Level Collection|`collections`|Set (according to OAI/PMH)|`collection`|
+|Subordinate Collection|`collections`|Set (according to OAI/PMH)|page number (from OAI/PMH)|
+|Manifest|`manifests`|Object ID|page number (from OAI/PMH)|`manifest`|
 
+Examples:
+
+`https://iiif.ub.uni-leipzig.de/kenom/collections/institution:DE-15/collection.json`
+
+`https://iiif.ub.uni-leipzig.de/kenom/collections/institution:DE-15/1.json`
+
+`https://iiif.ub.uni-leipzig.de/kenom/manifests/record_DE-15_kenom_161017/manifest.json`
