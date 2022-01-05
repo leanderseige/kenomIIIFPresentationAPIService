@@ -20,7 +20,7 @@ This is an experimental service to generate IIIF manifests for KENOM (http://ken
 | |----------|----------|----------|
 |Top Level Collection|`collections`|Set (according to OAI/PMH)|`collection`|
 |Subordinate Collection|`collections`|Set (according to OAI/PMH)|page number (from OAI/PMH)|
-|Manifest|`manifests`|Object ID|page number (from OAI/PMH)|`manifest`|
+|Manifest|`manifests`|Object ID|`manifest`|
 
 Examples:
 
