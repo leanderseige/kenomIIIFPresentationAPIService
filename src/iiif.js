@@ -6,7 +6,7 @@ const template300 = require('./template-3.0.0.json')
 const config = require('./config.json')
 
 exports.buildManifest2 = (p,record,lidoUrl) => {
-  let lidoRecID = record.getRecordID()
+  let lidoRecID = record.getLidoRecordID()
   let label = record.getLabel()
   let images = record.getKenomImages()
   let license = record.getLicenseUri()
@@ -20,11 +20,11 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
     data.label = label
     data.license = license
     data.requiredStatement = stmt
-    data.metadata = {
-      year: year,
-      place: place,
-      person: person
-    }
+    data.metadata = [
+			{ label:"Year", value: year },
+      { label:"Place", value: place },
+      { label:"Person", value: person }
+    ]
     data.seeAlso = lidoUrl
     data.sequences[0] = tools.clone(template211.sequence)
     data.sequences[0]['@id'] = `https://${lidoRecID}/s0`
@@ -32,15 +32,15 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
       data.sequences[0].canvases[key] = tools.clone(template211.canvas)
       data.sequences[0].canvases[key].label = lidoRecID
       data.sequences[0].canvases[key]['@id'] = `https://${lidoRecID}/c${key}`
-      data.sequences[0].canvases[key].width = images[key].width
-      data.sequences[0].canvases[key].height = images[key].height
+      data.sequences[0].canvases[key].width = parseInt(images[key].width)
+      data.sequences[0].canvases[key].height = parseInt(images[key].height)
       data.sequences[0].canvases[key].images[0] = tools.clone(template211.image)
       data.sequences[0].canvases[key].images[0]['@id'] = `https://${lidoRecID}/i${key}`
       data.sequences[0].canvases[key].images[0].on = `https://${lidoRecID}/c${key}`
       data.sequences[0].canvases[key].images[0].resource['@id'] = `https://${lidoRecID}/r${key}`
       data.sequences[0].canvases[key].images[0].resource.service['@id'] = images[key].url.replace('/full/full/0/default.jpg','')
-      data.sequences[0].canvases[key].images[0].resource.width = images[key].width
-      data.sequences[0].canvases[key].images[0].resource.height = images[key].height
+      data.sequences[0].canvases[key].images[0].resource.width = parseInt(images[key].width)
+      data.sequences[0].canvases[key].images[0].resource.height = parseInt(images[key].height)
     }
   } catch(err) {
     console.log(err)
