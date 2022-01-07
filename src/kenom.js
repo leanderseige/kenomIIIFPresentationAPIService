@@ -1,9 +1,11 @@
 const { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser')
+// const { LidoReader } = require('liblido')
+const LidoReader = require('liblido')
 const fetch = require('node-fetch')
-const Database = require('better-sqlite3');
+const Database = require('better-sqlite3')
 const { v5 } = require('uuid')
 const config = require('./config.json')
-
+const tools = require('./tools.js')
 const { cache_table_definition, cache_get_query, cache_store_query, cache_truncat_query } = require('./db')
 const iiif = require('./iiif')
 
@@ -23,8 +25,9 @@ function getCachedFetch(query,useCache,logger) {
 				let age = now-cacheresult.last
 				if(config.cacheMaxAge===-1 || age<config.cacheMaxAge) {
         	logger.info("Returning backend cache data.")
-        	resolve(cacheresult.body)
-        	db.close()
+          let retval = tools.clone(cacheresult.body)
+          db.close()
+        	resolve(retval)
         	return
 				}
       }
@@ -35,15 +38,21 @@ function getCachedFetch(query,useCache,logger) {
       headers: {}
     }
     fetch(query,options)
-      .then(response => response.text())
       .then(response => {
-        stmt_store.run(key, Math.round(Date.now()/1000), response)
-        db.close()
-        resolve(response)
-        return
+        if(!response.ok) {
+          db.close()
+          reject({status:500,message:"Could not complete request. 1",data:null})
+          return
+        }
+        response.text().then(response => {
+          stmt_store.run(key, Math.round(Date.now()/1000), response)
+          db.close()
+          resolve(response)
+          return
+        })
       }).catch( error => {
         db.close()
-        reject({status:500,message:"Could not complete request. 1",data:null})
+        reject({status:500,message:"Could not complete request. 2",data:null})
         return
       })
 
@@ -51,22 +60,23 @@ function getCachedFetch(query,useCache,logger) {
 }
 
 
-exports.getManifest = (p,logger) => {
+exports.getManifest = (p,logger,req) => {
   return new Promise((resolve, reject) => {
-    let query = `https://www.kenom.de/oai/?verb=GetRecord&identifier=${p[2]}&metadataPrefix=lido`
-    logger.info("Fetching fresh data: "+query)
-    getCachedFetch(query,true,logger)
+    let lidoUrl = `https://www.kenom.de/oai/?verb=GetRecord&identifier=${p[2]}&metadataPrefix=lido`
+    logger.info("Fetching fresh data: "+lidoUrl)
+    getCachedFetch(lidoUrl,true,logger)
       .then(response => {
-        const parser = new XMLParser()
-        let data = parser.parse(response)
-        data = iiif.buildManifest2(data['OAI-PMH']['GetRecord']['record']['metadata']['lido:lido'])
+        const reader = new LidoReader(response)
+        let records = reader.getAllRecords()
+        data = iiif.buildManifest2(p,records[0],lidoUrl)
+        // data = iiif.buildManifest2(data['OAI-PMH']['GetRecord']['record']['metadata']['lido:lido'])
         if(!data) {
           reject({status:500,message:"Can't generate IIIF Manifest",data:null})
           return
         }
         resolve({status:200,message:null,data:JSON.stringify(data)})
       }).catch(err => {
-          reject({status:500,message:"Could not complete request.",data:null})
+          reject({status:500,message:"Could not complete request. Error parsing.",data:null})
         }
       )
   })
@@ -88,21 +98,8 @@ function getRecursiveCollection(query,part,logger) {
           resolve(data['OAI-PMH']['ListRecords']['record'])
           return
         }
-        let nofrecords = parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_completeListSize'])
-/*
-				if(data['OAI-PMH']['ListRecords']['resumptionToken']) {
-        	let pagesize = 200 // FIXME parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_cursor'])
-	        page=parseInt(part)
-  	      console.log("page: "+page)
-	        console.log("pagesize: "+pagesize)
-	        console.log("nofrecords: "+nofrecords)
-	        console.log("maxpages: "+Math.ceil(nofrecords/pagesize))
-  	      if(page>Math.ceil(nofrecords/pagesize)||page===0) {
-    	      reject({status:404,message:"Illegal page number.",data:null})
-      	    return
-	        }
-				}
-*/
+        // let nofrecords = parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_completeListSize'])
+
         logger.info(`Step ${page} to ${part}`)
         getRecursiveCollection(
             `https://www.kenom.de/oai/?verb=ListRecords&resumptionToken=${data['OAI-PMH']['ListRecords']['resumptionToken']['#text']}`
@@ -144,18 +141,21 @@ exports.getCollection = (p,logger) => {
     getRecursiveCollection(query,part,logger)
       .then( (response) => {
         getSetsInfo(true,logger).then(setsInfo => {
-          if(part==='collection') {
-            data = response['OAI-PMH']['ListRecords']['resumptionToken']
-            data = iiif.buildCollectionOfCollectionPages2(part,data['@_completeListSize'],data['@_cursor'],logger)
-          } else {
-            data = iiif.buildCollectionOfManifests2(part,response,logger)
-          }
+          let collName = ''
           for(let setInfo of setsInfo) {
             if(setInfo.setSpec === p[2]) {
-              data.description = setInfo.setName
+              collName = setInfo.setName
               break
             }
           }
+          if(part==='collection') {
+            data = response['OAI-PMH']['ListRecords']['resumptionToken']
+            data = iiif.buildCollectionOfCollectionPages2(part,data['@_completeListSize'],data['@_cursor'],logger,collName)
+          } else {
+            data = iiif.buildCollectionOfManifests2(part,response,logger)
+          }
+          data.description = collName
+          data.label = collName
           resolve({status:200,message:null,data:JSON.stringify(data)})
         }).catch(
           e => console.error(e)

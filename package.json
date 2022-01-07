@@ -12,7 +12,7 @@
     "url": "git+https://github.com/seigedigital/kenomIIIFPresentationAPIService.git"
   },
   "author": "Leander Seige",
-  "license": "ISC",
+  "license": "MIT License",
   "bugs": {
     "url": "https://github.com/seigedigital/kenomIIIFPresentationAPIService/issues"
   },
@@ -23,7 +23,8 @@
     "fast-xml-parser": "^4.0.0-beta.3",
     "log4js": "^6.3.0",
     "node-fetch": "^2.6.6",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "liblido": "github:seigedigital/liblido"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"

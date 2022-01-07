@@ -5,30 +5,45 @@ const template300 = require('./template-3.0.0.json')
 
 const config = require('./config.json')
 
-exports.buildManifest2 = (lido) => {
+exports.buildManifest2 = (p,record,lidoUrl) => {
+  let lidoRecID = record.getRecordID()
+  let label = record.getLabel()
+  let images = record.getKenomImages()
+  let license = record.getLicenseUri()
+  let stmt = record.getReqStatement()
+  let year = record.getCreationYear()
+  let place = record.getCreationPlace()
+  let person = record.getEventActorRoles()
   try {
     data = tools.clone(template211.manifest)
-    data['@id'] = config.baseurl+`/kenom/manifests/${lido['lido:lidoRecID']}/manifest.json`
-    data.label = lido['lido:descriptiveMetadata']['lido:objectIdentificationWrap']['lido:titleWrap']['lido:titleSet'][0]['lido:appellationValue']
+    data['@id'] = config.baseurl+`/kenom/manifests/${lidoRecID}/manifest.json`
+    data.label = label
+    data.license = license
+    data.requiredStatement = stmt
+    data.metadata = {
+      year: year,
+      place: place,
+      person: person
+    }
+    data.seeAlso = lidoUrl
     data.sequences[0] = tools.clone(template211.sequence)
-    data.sequences[0]['@id'] = 'https://'+lido['lido:lidoRecID']+'/s0'
-    if(lido['lido:administrativeMetadata']['lido:resourceWrap']!==undefined) {
-      for(let k in lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet']) {
-        data.sequences[0].canvases[k] = tools.clone(template211.canvas)
-        data.sequences[0].canvases[k].label = lido['lido:lidoRecID']
-        data.sequences[0].canvases[k]['@id'] = 'https://'+lido['lido:lidoRecID']+'/c'+k
-        data.sequences[0].canvases[k].width = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
-        data.sequences[0].canvases[k].height = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
-        data.sequences[0].canvases[k].images[0] = tools.clone(template211.image)
-        data.sequences[0].canvases[k].images[0]['@id'] = 'https://'+lido['lido:lidoRecID']+'/i'+k
-        data.sequences[0].canvases[k].images[0].on = 'https://'+lido['lido:lidoRecID']+'/c'+k
-        data.sequences[0].canvases[k].images[0].resource['@id'] = 'https://'+lido['lido:lidoRecID']+'/r'+k
-        data.sequences[0].canvases[k].images[0].resource.service['@id'] = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:linkResource'].replace('/full/full/0/default.jpg','')
-        data.sequences[0].canvases[k].images[0].resource.width = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
-        data.sequences[0].canvases[k].images[0].resource.height = lido['lido:administrativeMetadata']['lido:resourceWrap']['lido:resourceSet'][k]['lido:resourceRepresentation'][0]['lido:resourceMeasurementsSet'][0]['lido:measurementValue']
-      }
+    data.sequences[0]['@id'] = `https://${lidoRecID}/s0`
+    for(let key in images) {
+      data.sequences[0].canvases[key] = tools.clone(template211.canvas)
+      data.sequences[0].canvases[key].label = lidoRecID
+      data.sequences[0].canvases[key]['@id'] = `https://${lidoRecID}/c${key}`
+      data.sequences[0].canvases[key].width = images[key].width
+      data.sequences[0].canvases[key].height = images[key].height
+      data.sequences[0].canvases[key].images[0] = tools.clone(template211.image)
+      data.sequences[0].canvases[key].images[0]['@id'] = `https://${lidoRecID}/i${key}`
+      data.sequences[0].canvases[key].images[0].on = `https://${lidoRecID}/c${key}`
+      data.sequences[0].canvases[key].images[0].resource['@id'] = `https://${lidoRecID}/r${key}`
+      data.sequences[0].canvases[key].images[0].resource.service['@id'] = images[key].url.replace('/full/full/0/default.jpg','')
+      data.sequences[0].canvases[key].images[0].resource.width = images[key].width
+      data.sequences[0].canvases[key].images[0].resource.height = images[key].height
     }
   } catch(err) {
+    console.log(err)
     return false
   }
   return data
@@ -54,7 +69,7 @@ exports.buildCollectionOfManifests2 = (part,dc,logger) => {
   return data
 }
 
-exports.buildCollectionOfCollectionPages2 = (part,total,pagesize,logger) => {
+exports.buildCollectionOfCollectionPages2 = (part,total,pagesize,logger,collName) => {
   try {
     data = tools.clone(template211.collection)
     data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
@@ -64,7 +79,7 @@ exports.buildCollectionOfCollectionPages2 = (part,total,pagesize,logger) => {
       let newcol = {}
       newcol["@id"] = config.baseurl+`/kenom/collections/institution:DE-15/${page}.json`
       newcol["@type"] = "sc:Collection"
-      newcol["label"] = `Collection page ${page}`
+      newcol["label"] = `${collName}, Page ${page}`
       data.collections.push(newcol)
     }
   } catch(error) {
