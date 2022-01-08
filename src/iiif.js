@@ -14,6 +14,7 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
   let year = record.getCreationYear()
   let place = record.getCreationPlace()
   let person = record.getEventActorRoles()
+  let rlinks = record.getRelatedLinks()
   try {
     data = tools.clone(template211.manifest)
     const mid = config.baseurl+`/kenom/manifests/${lidoRecID}`
@@ -26,13 +27,18 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
       { label:"Place", value: place },
       { label:"Person", value: person }
     ]
+    if(rlinks.length>0) {
+      for(let rl in rlinks) {
+        data.metadata.push({ label:'Link', value:rl })
+      }
+    }
     data.seeAlso = lidoUrl
     data.sequences[0] = tools.clone(template211.sequence)
     data.sequences[0]['@id'] = `https://${lidoRecID}/s0`
     for(let key in images) {
 			let ilabel = images[key].perspective.charAt(0).toUpperCase() + images[key].perspective.slice(1)
       data.sequences[0].canvases[key] = tools.clone(template211.canvas)
-      data.sequences[0].canvases[key].label = ilabel 
+      data.sequences[0].canvases[key].label = ilabel
       data.sequences[0].canvases[key]['@id'] = `${mid}/canvas${key}`
       data.sequences[0].canvases[key].width = parseInt(images[key].width)
       data.sequences[0].canvases[key].height = parseInt(images[key].height)
@@ -44,7 +50,7 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
       data.sequences[0].canvases[key].images[0].resource.service['@id'] = images[key].url.replace('/full/full/0/default.jpg','')
       data.sequences[0].canvases[key].images[0].resource.width = parseInt(images[key].width)
       data.sequences[0].canvases[key].images[0].resource.height = parseInt(images[key].height)
-      data.sequences[0].canvases[key].images[0].resource.label = ilabel 
+      data.sequences[0].canvases[key].images[0].resource.label = ilabel
     }
   } catch(err) {
     console.log(err)
