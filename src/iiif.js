@@ -28,10 +28,13 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
       { label:"Person", value: person }
     ]
     if(rlinks.length>0) {
-      for(let rl in rlinks) {
-        data.metadata.push({ label:'Link', value:rl })
-      }
-    }
+			data.rendering = []
+    	for(let key in rlinks) {
+				let rl = { label:"View on external site.", format:"text/html" }
+				rl['@id'] = rlinks[key]
+				data.rendering.push(rl)
+			}
+		}
     data.seeAlso = lidoUrl
     data.sequences[0] = tools.clone(template211.sequence)
     data.sequences[0]['@id'] = `https://${lidoRecID}/s0`
