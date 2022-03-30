@@ -98,42 +98,22 @@ app.all('*', function (req, res, next) {
     }
   }
 
-  // sender function
-  let sender = function(response) {
-    if(response.status!==200) {
-      logger.info(`Error. ${response.message}`)
-      res.status(response.status).send(response.message)
-      return
-    }
+  const [getData, errMessageForClient] = p[1] === 'collections'
+    ? [kenom.getCollection, 'Error getting collection']
+    : [kenom.getManifest, 'Error getting manifest']
+
+  getData(p, logger).then(data => {    
     if(config.caching) {
       logger.info("Updating cache.")
-      stmt_store.run(key, Math.round(Date.now()/1000), response.data)
+      stmt_store.run(key, Math.round(Date.now()/1000), JSON.stringify(data))
     }
     logger.info("Sending data.")
-    res.send(response.data)
-  }
-
-  switch(p[1]) {
-    case 'collections':
-      kenom.getCollection(p,logger).then( (response) =>{
-        sender(response)
-      }).catch(error => {
-        logger.error("Error getting Collection.")
-        logger.error(error)
-        res.status(error.status).send(error.message)
-      })
-      break
-    case 'manifests':
-    default:
-      kenom.getManifest(p,logger).then( (response) =>{
-        sender(response)
-      }).catch(error => {
-        logger.error("Error getting Manifest.")
-        logger.error(error)
-        res.status(error.status).send(error.message)
-      })
-  }
-
+    res.json(data)
+  })
+  .catch(error => {
+    logger.error(error)
+    res.status(500).send(errMessageForClient)
+  })
 })
 
 app.listen(config.port,config.interface)
