@@ -32,7 +32,7 @@ async function getCachedFetch(query, useCache, logger) {
 
   try {
     const response = await fetch(query)
-   
+
     if (!response.ok) {
       throw new Error('getCachedFetch: response code was not `ok`')
     }
@@ -52,12 +52,12 @@ exports.getManifest = async (p,logger,req) => {
   let lidoUrl = `https://www.kenom.de/oai/?verb=GetRecord&identifier=${p[2]}&metadataPrefix=lido`
   logger.info("Fetching fresh data: "+lidoUrl)
   const response = await getCachedFetch(lidoUrl,true,logger)
-  
+
   const reader = new LidoReader(response)
   let records = reader.getAllRecords()
   const data = iiif.buildManifest2(p,records[0],lidoUrl)
   // data = iiif.buildManifest2(data['OAI-PMH']['GetRecord']['record']['metadata']['lido:lido'])
-  
+
   if(!data) {
     throw new Error("Can't generate IIIF Manifest")
   }
@@ -70,17 +70,17 @@ async function getRecursiveCollection(query,part,logger) {
   const response = await getCachedFetch(query,true,logger)
   const parser = new XMLParser({ignoreAttributes:false})
   const data = parser.parse(response)
-  
+
   if(part === 'collection') {
     return data
   }
 
   const page = parseInt(part)
-  
+
   if(page === 1) {
     return data['OAI-PMH']['ListRecords']['record']
   }
-  
+
   // let nofrecords = parseInt(data['OAI-PMH']['ListRecords']['resumptionToken']['@_completeListSize'])
 
   logger.info(`Step ${page} to ${part}`)
@@ -90,6 +90,23 @@ async function getRecursiveCollection(query,part,logger) {
     ,(page - 1).toString()
     ,logger
   )
+}
+async function getFatRecursiveCollection(query,logger) {
+  console.log("QUERY "+query)
+  const response = await getCachedFetch(query,true,logger)
+  const parser = new XMLParser({ignoreAttributes:false})
+  const data = parser.parse(response)
+
+  let retval = JSON.parse(JSON.stringify(data['OAI-PMH']['ListRecords']['record']))
+
+  if(data['OAI-PMH']['ListRecords']['resumptionToken']) {
+    return retval.concat( await getFatRecursiveCollection(
+      `https://www.kenom.de/oai/?verb=ListRecords&resumptionToken=${data['OAI-PMH']['ListRecords']['resumptionToken']['#text']}`
+      ,logger
+    ))
+  } else {
+    return retval
+  }
 }
 
 async function getSetsInfo(useCache,logger) {
@@ -104,8 +121,14 @@ exports.getCollection = async (p,logger) => {
   const part = p[3].replace('.json','')
   const query = `https://www.kenom.de/oai/?verb=ListRecords&metadataPrefix=oai_dc&set=${p[2]}`
   console.log(query)
-  
-  const response = await getRecursiveCollection(query,part,logger)
+
+  let response
+
+  if(part === 'all') {
+    response = await getFatRecursiveCollection(query,part,logger)
+  } else {
+    response = await getRecursiveCollection(query,part,logger)
+  }
   const setsInfo = await getSetsInfo(true, logger)
 
   let collName = ''
@@ -121,7 +144,7 @@ exports.getCollection = async (p,logger) => {
     data = response['OAI-PMH']['ListRecords']['resumptionToken']
     data = iiif.buildCollectionOfCollectionPages2(part,data['@_completeListSize'],data['@_cursor'],logger,collName)
   } else {
-    data = iiif.buildCollectionOfManifests2(part,response,logger)
+    data = iiif.buildCollectionOfManifests2(part,response,part==='all',logger)
   }
 
   data.description = collName

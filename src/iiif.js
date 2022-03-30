@@ -62,7 +62,7 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
   return data
 }
 
-exports.buildCollectionOfManifests2 = (part,dc,logger) => {
+exports.buildCollectionOfManifests2 = (part,dc,slim,logger) => {
   try {
     data = tools.clone(template211.collection)
     data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
@@ -72,7 +72,9 @@ exports.buildCollectionOfManifests2 = (part,dc,logger) => {
       let newman = {}
       newman["@id"] = config.baseurl+"/kenom/manifests/"+dc[k]['header']['identifier']+"/manifest.json"
       newman["@type"] = "sc:Manifest"
-      newman["label"] = dc[k]['metadata']['oai_dc:dc']['dc:title']
+      if(!slim) {
+        newman["label"] = dc[k]['metadata']['oai_dc:dc']['dc:title']        
+      }
       data.manifests.push(newman)
     }
   } catch(error) {

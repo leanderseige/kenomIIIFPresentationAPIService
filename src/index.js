@@ -7,6 +7,8 @@ const { cache_table_definition, cache_get_query, cache_store_query, cache_trunca
 const config = require('./config.json')
 const kenom = require('./kenom')
 
+const fs = require('fs');
+
 // Logger
 log4js.configure({
   appenders: {
@@ -62,7 +64,7 @@ app.all('*', function (req, res, next) {
 
   // p[3] => collection:collection for top level or number for sub-level
   //      => manifest: just 'manifest'
-  const regexFilenameCheck = new RegExp('^(collection|manifest|[0-9]{1,4}).json$')
+  const regexFilenameCheck = new RegExp('^(collection|manifest|all|[0-9]{1,4}).json$')
 	if( ! regexFilenameCheck.test(p[3]) ) {
     res.status(404).send("Error. Illegal query. 4")
 		return
@@ -82,7 +84,9 @@ app.all('*', function (req, res, next) {
   if(config.caching) {
     logger.info("Looking for cached data.")
     let now = Math.round(Date.now()/1000)
+    console.log("looking for key "+key)
     let cacheresult = stmt_get.get(key)
+    console.log("found "+cacheresult)
     if(cacheresult) {
       let age = now-cacheresult.last
       logger.info("Cache age: "+age+" sec.")
@@ -102,9 +106,11 @@ app.all('*', function (req, res, next) {
     ? [kenom.getCollection, 'Error getting collection']
     : [kenom.getManifest, 'Error getting manifest']
 
-  getData(p, logger).then(data => {    
+  getData(p, logger).then(data => {
     if(config.caching) {
       logger.info("Updating cache.")
+      console.log("key: "+key)
+      fs.writeFile("last_cache.blob", JSON.stringify(data), ()=>{} )
       stmt_store.run(key, Math.round(Date.now()/1000), JSON.stringify(data))
     }
     logger.info("Sending data.")
