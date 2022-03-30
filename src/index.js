@@ -1,4 +1,5 @@
 const express = require('express')
+const compression = require('compression')
 const log4js = require('log4js')
 const Database = require('better-sqlite3');
 const { v5 } = require('uuid')
@@ -31,6 +32,8 @@ const stmt_store = db.prepare(cache_store_query)
 
 // Run Server
 const app = express()
+app.use(compression())
+
 app.all('*', function (req, res, next) {
 
   // checking new query

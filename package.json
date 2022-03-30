@@ -19,12 +19,13 @@
   "homepage": "https://github.com/seigedigital/kenomIIIFPresentationAPIService#readme",
   "dependencies": {
     "better-sqlite3": "^7.4.5",
+    "compression": "^1.7.4",
     "express": "^4.17.1",
     "fast-xml-parser": "^4.0.0-beta.3",
+    "liblido": "github:seigedigital/liblido",
     "log4js": "^6.3.0",
     "node-fetch": "^2.6.6",
-    "uuid": "^8.3.2",
-    "liblido": "github:seigedigital/liblido"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"
