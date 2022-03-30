@@ -125,7 +125,7 @@ exports.getCollection = async (p,logger) => {
   let response
 
   if(part === 'all') {
-    response = await getFatRecursiveCollection(query,part,logger)
+    response = await getFatRecursiveCollection(query,logger)
   } else {
     response = await getRecursiveCollection(query,part,logger)
   }
