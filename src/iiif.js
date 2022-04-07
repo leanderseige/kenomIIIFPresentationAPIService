@@ -15,6 +15,9 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
   let place = record.getCreationPlace()
   let person = record.getEventActorRoles()
   let rlinks = record.getRelatedLinks()
+  let physmeasurements = record.getPhysicalMeasurements()
+  let material = record.getMaterial()
+  console.log(material)
   try {
     data = tools.clone(template211.manifest)
     const mid = config.baseurl+`/kenom/manifests/${lidoRecID}`
@@ -27,6 +30,16 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
       { label:"Place", value: place },
       { label:"Person", value: person }
     ]
+    if(material.length>0) {
+      data.metadata.push({ label:"Material", value: material[0].terms.join(', ') })
+      data.metadata.push({ label:"Material URIs", value: material[0].uris })
+    }
+    for(let key in physmeasurements) {
+      data.metadata.push({
+        label: `${physmeasurements[key].name} (${physmeasurements[key].unit})`,
+        value: physmeasurements[key].value
+      })
+    }
     if(rlinks.length>0) {
 			data.rendering = []
     	for(let key in rlinks) {
@@ -73,7 +86,7 @@ exports.buildCollectionOfManifests2 = (part,dc,slim,logger) => {
       newman["@id"] = config.baseurl+"/kenom/manifests/"+dc[k]['header']['identifier']+"/manifest.json"
       newman["@type"] = "sc:Manifest"
       if(!slim) {
-        newman["label"] = dc[k]['metadata']['oai_dc:dc']['dc:title']        
+        newman["label"] = dc[k]['metadata']['oai_dc:dc']['dc:title']
       }
       data.manifests.push(newman)
     }
