@@ -32,7 +32,7 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
     ]
     if(material.length>0) {
       data.metadata.push({ label:"Material", value: material[0].terms.join(', ') })
-      data.metadata.push({ label:"Material URIs", value: material[0].uris })
+      data.metadata.push({ label:"Material URIs", value: material[0].uris.join(' ') })
     }
     for(let key in physmeasurements) {
       data.metadata.push({
