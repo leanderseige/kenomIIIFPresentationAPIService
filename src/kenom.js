@@ -119,6 +119,7 @@ async function getSetsInfo(useCache,logger) {
 exports.getCollection = async (p,logger) => {
   logger.info("Fetching fresh data.")
   const part = p[3].replace('.json','')
+  const set = p[2]
   const query = `https://www.kenom.de/oai/?verb=ListRecords&metadataPrefix=oai_dc&set=${p[2]}`
   console.log(query)
 
@@ -142,9 +143,9 @@ exports.getCollection = async (p,logger) => {
   let data
   if(part === 'collection') {
     data = response['OAI-PMH']['ListRecords']['resumptionToken']
-    data = iiif.buildCollectionOfCollectionPages2(part,data['@_completeListSize'],data['@_cursor'],logger,collName)
+    data = iiif.buildCollectionOfCollectionPages2(part,set,data['@_completeListSize'],data['@_cursor'],logger,collName)
   } else {
-    data = iiif.buildCollectionOfManifests2(part,response,part==='all',logger)
+    data = iiif.buildCollectionOfManifests2(part,set,response,part==='all',logger)
   }
 
   data.description = collName

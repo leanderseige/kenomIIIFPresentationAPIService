@@ -75,10 +75,10 @@ exports.buildManifest2 = (p,record,lidoUrl) => {
   return data
 }
 
-exports.buildCollectionOfManifests2 = (part,dc,slim,logger) => {
+exports.buildCollectionOfManifests2 = (part,set,dc,slim,logger) => {
   try {
     data = tools.clone(template211.collection)
-    data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
+    data['@id'] = config.baseurl+`/kenom/collections/${set}/${part}.json`
     data['label'] = data['@id']
 		delete data.collections
     for(let k in dc) {
@@ -97,15 +97,15 @@ exports.buildCollectionOfManifests2 = (part,dc,slim,logger) => {
   return data
 }
 
-exports.buildCollectionOfCollectionPages2 = (part,total,pagesize,logger,collName) => {
+exports.buildCollectionOfCollectionPages2 = (part,set,total,pagesize,logger,collName) => {
   try {
     data = tools.clone(template211.collection)
-    data['@id'] = config.baseurl+`/kenom/collections/institution:DE-15/${part}.json`
+    data['@id'] = config.baseurl+`/kenom/collections/${set}/${part}.json`
     data['label'] = data['@id']
 		delete data.manifests
     for(let page=1; page<=Math.ceil(total/pagesize); page++) {
       let newcol = {}
-      newcol["@id"] = config.baseurl+`/kenom/collections/institution:DE-15/${page}.json`
+      newcol["@id"] = config.baseurl+`/kenom/collections/${set}/${page}.json`
       newcol["@type"] = "sc:Collection"
       newcol["label"] = `${collName}, Page ${page}`
       data.collections.push(newcol)
